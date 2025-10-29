@@ -1,33 +1,71 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import Chart from '../components/Chart'
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
+const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws'
+
 export default function Dashboard() {
   const [liveData, setLiveData] = useState([])
+  const [portfolio, setPortfolio] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+
+  const connectWebSocket = useCallback(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      navigate('/login')
+      return
+    }
+
+    const ws = new WebSocket(`${WS_URL}?token=${token}`)
+    
+    ws.onopen = () => {
+      console.log('WebSocket connected')
+      setError('')
+    }
+
+    ws.onmessage = (ev) => {
+      try {
+        const data = JSON.parse(ev.data)
+        if (data.event === 'marketData') {
+          setLiveData((prev) => [...prev.slice(-199), data.data])
+        } else if (data.event === 'portfolio') {
+          setPortfolio(data.data)
+        }
+      } catch (e) {
+        console.warn('WebSocket message parse error:', e)
+      }
+    }
+
+    ws.onclose = (ev) => {
+      console.log('WebSocket closed:', ev.reason)
+      if (ev.code === 1008) {  // Policy violation (auth error)
+        navigate('/login')
+      } else {
+        setError('Connection lost. Retrying...')
+        setTimeout(connectWebSocket, 5000)  // Retry after 5s
+      }
+    }
+
+    ws.onerror = (ev) => {
+      console.error('WebSocket error:', ev)
+      setError('Connection error')
+    }
+
+    return ws
+  }, [navigate])
 
   useEffect(() => {
-    const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws'
-    let ws
-    try {
-      ws = new WebSocket(wsUrl)
-      ws.onopen = () => console.log('WS connected')
-      ws.onmessage = (ev) => {
-        try {
-          const d = JSON.parse(ev.data)
-          setLiveData((prev) => [...prev.slice(-199), d])
-        } catch (e) {
-          // ignore non-json
-        }
-      }
-      ws.onclose = () => console.log('WS closed')
-    } catch (e) {
-      console.warn('WS init error', e)
-    }
-
+    const ws = connectWebSocket()
+    setLoading(false)
+    
     return () => {
-      try { ws && ws.close() } catch (e) {}
+      try { ws.close() } catch (e) {}
     }
-  }, [])
+  }, [connectWebSocket])
 
   return (
     <div>
