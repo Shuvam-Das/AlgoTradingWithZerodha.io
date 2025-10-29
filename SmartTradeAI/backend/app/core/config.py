@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from pydantic_settings import BaseSettings
 from pydantic import EmailStr, AnyHttpUrl, validator
 
