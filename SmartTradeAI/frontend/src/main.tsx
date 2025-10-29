@@ -1,10 +1,18 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { HashRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 
-createRoot(document.getElementById('root')!).render(
+const container = document.getElementById('root')
+if (!container) throw new Error('Failed to find the root element')
+
+const root = createRoot(container)
+
+root.render(
   <StrictMode>
-    <App />
-  </StrictMode>,
+    <HashRouter>
+      <App />
+    </HashRouter>
+  </StrictMode>
 )

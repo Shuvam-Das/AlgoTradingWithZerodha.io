@@ -1,23 +1,15 @@
 import React from 'react'
-import { Routes, Route, Navigate, HashRouter } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import ProtectedRoute from './components/ProtectedRoute'
-
-const Layout = ({ children }) => {
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
-      </div>
-    </div>
-  )
-}
+import NavBar from './components/NavBar'
 
 export default function App() {
   return (
-    <HashRouter>
-      <Layout>
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <NavBar />
+      <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route 
@@ -30,7 +22,12 @@ export default function App() {
           />
           <Route path="/login" element={<Login />} />
         </Routes>
-      </Layout>
-    </HashRouter>
+      </main>
+      <footer className="bg-white border-t py-4">
+        <div className="container mx-auto px-4 text-center text-gray-600">
+          <p>© 2025 SmartTradeAI. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
   )
 }
