@@ -25,6 +25,28 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_EMAIL: EmailStr = "admin@example.com"
     FIRST_SUPERUSER_PASSWORD: str = "admin"
 
+    # Zerodha Kite API
+    KITE_API_KEY: str = os.getenv("KITE_API_KEY", "your-kite-api-key")
+    KITE_API_SECRET: str = os.getenv("KITE_API_SECRET", "your-kite-api-secret")
+    KITE_ACCESS_TOKEN: str = os.getenv("KITE_ACCESS_TOKEN", "your-kite-access-token")
+
+    # NewsAPI
+    NEWS_API_KEY: str = os.getenv("NEWS_API_KEY", "your-news-api-key")
+
+    # OpenAI API
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "your-openai-api-key")
+
+    # Telegram Bot
+    TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "your-telegram-bot-token")
+
+    # Celery
+    CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+    CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+
+    # Celery
+    CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+    CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+
     class Config:
         case_sensitive = True
         env_file = ".env"
