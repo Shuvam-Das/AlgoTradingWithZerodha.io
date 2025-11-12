@@ -1,8 +1,9 @@
+from app.telegram_bot import setup_telegram_bot
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-
 from app.api.api_v1.api import api_router
 from app.core.config import settings
+from app.core.socket_manager import sio
 
 app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
@@ -19,3 +20,6 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+socket_app = socketio.ASGIApp(sio, app)
+
+setup_telegram_bot()

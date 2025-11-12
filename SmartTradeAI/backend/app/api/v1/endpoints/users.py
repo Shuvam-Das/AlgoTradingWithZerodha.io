@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app.core.config import settings
+from app.services import notification
 
 router = APIRouter()
 
@@ -41,3 +42,18 @@ def read_users(
     """
     users = crud.user.get_multi(db, skip=skip, limit=limit)
     return users
+
+@router.post("/send-test-email")
+def send_test_email(
+    email_to: str,
+    current_user: models.User = Depends(deps.get_current_active_user),
+):
+    """
+    Send a test email.
+    """
+    notification.send_email(
+        to_email=email_to,
+        subject="Test Email",
+        message="This is a test email from SmartTradeAI.",
+    )
+    return {"message": "Test email sent"}

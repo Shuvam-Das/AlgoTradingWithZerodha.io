@@ -1,86 +1,116 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-export default function Login(){
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
-
-  const submit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    
+  const handleLogin = async (e) => {
+    e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          username: email,  // OAuth2 expects username
-          password: password
-        })
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.detail || 'Login failed')
-      }
-
-      // Store token
-      localStorage.setItem('token', data.access_token)
-      navigate('/dashboard')
-      
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+      const response = await axios.post('http://localhost:8000/api/v1/login/access-token', {
+        username: email,
+        password: password,
+      }, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('accessToken', response.data.access_token);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login failed:', error);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <form onSubmit={submit} className="w-full max-w-md bg-white p-8 rounded shadow">
-        <h1 className="text-2xl font-semibold mb-6">Sign in</h1>
-        
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded">
-            {error}
+    <div className="flex items-center justify-center h-screen bg-gray-100">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold text-center text-gray-900">Login</h2>
+        <form className="space-y-6" onSubmit={handleLogin}>
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Email address
+            </label>
+            <div className="mt-1">
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
           </div>
-        )}
 
-        <label className="block mb-2 text-sm">Email</label>
-        <input 
-          type="email"
-          required
-          value={email} 
-          onChange={(e)=>setEmail(e.target.value)} 
-          className="w-full p-2 border rounded mb-4" 
-        />
-        
-        <label className="block mb-2 text-sm">Password</label>
-        <input 
-          type="password"
-          required
-          value={password} 
-          onChange={(e)=>setPassword(e.target.value)} 
-          className="w-full p-2 border rounded mb-4" 
-        />
-        
-        <button 
-          type="submit"
-          disabled={loading}
-          className={`w-full py-2 rounded text-white ${
-            loading ? 'bg-gray-400' : 'bg-primary-600 hover:bg-primary-700'
-          }`}
-        >
-          {loading ? 'Signing in...' : 'Sign in'}
-        </button>
-      </form>
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Password
+            </label>
+            <div className="mt-1">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              />
+              <label
+                htmlFor="remember-me"
+                className="block ml-2 text-sm text-gray-900"
+              >
+                Remember me
+              </label>
+            </div>
+
+            <div className="text-sm">
+              <a
+                href="#"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                Forgot your password?
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              className="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Sign in
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  )
-}
+  );
+};
+
+export default Login;

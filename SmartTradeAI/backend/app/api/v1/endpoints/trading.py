@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.services import zerodha
+from app.services import zerodha, strategy
 from app import models, schemas
 from app.api import deps
 
@@ -33,3 +33,14 @@ def place_order(
         tag=order.tag,
     )
     return {"order_id": order_id}
+
+@router.post("/generate-strategy")
+def generate_strategy(
+    ticker: str,
+    current_user: models.User = Depends(deps.get_current_active_user),
+):
+    """
+    Generate a trading strategy.
+    """
+    data = strategy.generate_moving_average_strategy(ticker)
+    return data.to_json()
