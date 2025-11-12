@@ -1,57 +1,43 @@
 from typing import Any, List
-from fastapi import APIRouter, Body, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app import crud, models, schemas
 from app.api import deps
-from app.core.security import get_password_hash
-from app.schemas.user import User, UserCreate, UserUpdate
-from app.crud.crud_user import crud_user
+from app.core.config import settings
 
 router = APIRouter()
 
-@router.post("/register", response_model=User)
+
+@router.post("/", response_model=schemas.User)
 def create_user(
     *,
     db: Session = Depends(deps.get_db),
-    user_in: UserCreate
+    user_in: schemas.UserCreate,
 ) -> Any:
     """
     Create new user.
     """
-    user = crud_user.get_by_email(db, email=user_in.email)
+    user = crud.user.get_by_email(db, email=user_in.email)
     if user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already exists."
+            status_code=400,
+            detail="The user with this username already exists in the system.",
         )
-    
-    return crud_user.create(db=db, obj_in=user_in)
+    user = crud.user.create(db, obj_in=user_in)
+    return user
 
-@router.get("/me", response_model=User)
-def read_user_me(
-    current_user: User = Depends(deps.get_current_active_user)
-) -> Any:
-    """
-    Get current user.
-    """
-    return current_user
 
-@router.put("/me", response_model=User)
-def update_user_me(
-    *,
+@router.get("/", response_model=List[schemas.User])
+def read_users(
     db: Session = Depends(deps.get_db),
-    password: str = Body(None),
-    full_name: str = Body(None),
-    email: str = Body(None),
-    current_user: User = Depends(deps.get_current_active_user)
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
-    Update current user.
+    Retrieve users.
     """
-    current_user_data = UserUpdate(
-        password=get_password_hash(password) if password else None,
-        full_name=full_name,
-        email=email
-    )
-    return crud_user.update(db=db, db_obj=current_user, obj_in=current_user_data)
+    users = crud.user.get_multi(db, skip=skip, limit=limit)
+    return users

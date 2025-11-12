@@ -1,18 +1,23 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
+
+from app import crud, schemas
 from app.core.config import settings
-from app.db.base import Base
+from app.db import base  # noqa: F401
 
-engine = create_engine(settings.DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def init_db() -> None:
-    # Create all tables
-    Base.metadata.create_all(bind=engine)
+# make sure all SQL Alchemy models are imported (app.db.base) before initializing DB
+# otherwise, SQL Alchemy might not see tables it needs to create
+def init_db(db: Session) -> None:
+    # Tables should be created with Alembic migrations
+    # But if you don't want to use migrations, create
+    # the tables un-commenting the next line
+    # Base.metadata.create_all(bind=engine)
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    user = crud.user.get_by_email(db, email=settings.FIRST_SUPERUSER_EMAIL)
+    if not user:
+        user_in = schemas.UserCreate(
+            email=settings.FIRST_SUPERUSER_EMAIL,
+            password=settings.FIRST_SUPERUSER_PASSWORD,
+            is_superuser=True,
+        )
+        user = crud.user.create(db, obj_in=user_in)

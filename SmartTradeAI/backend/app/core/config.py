@@ -1,63 +1,33 @@
-from typing import Any, Dict, List, Optional, Union
-from pydantic_settings import BaseSettings
-from pydantic import EmailStr, AnyHttpUrl, validator
+import os
+from typing import List, Optional, Union
+
+from pydantic import AnyHttpUrl, BaseSettings, validator
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "SmartTradeAI"
-    VERSION: str = "1.0.0"
-    DESCRIPTION: str = "AI-Powered Algorithmic Trading Platform"
+    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+
+    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, List):
+            return v
+        raise ValueError(v)
+
     API_V1_STR: str = "/api/v1"
-    
-    # Security
-    SECRET_KEY: str = "your-secret-key-here"  # Change in production
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    
-    # Database
-    DATABASE_URL: str
-    
-    # Redis
-    REDIS_URL: str
-    
-    # Celery
-    CELERY_BROKER_URL: str
-    CELERY_RESULT_BACKEND: str
-    
-    # CORS
-    ALLOWED_ORIGINS: List[AnyHttpUrl] = []
-    
-    # Email
-    SMTP_TLS: bool = True
-    SMTP_PORT: Optional[int] = None
-    SMTP_HOST: Optional[str] = None
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
-    EMAIL_FROM: Optional[EmailStr] = None
-    EMAIL_TEST_USER: EmailStr = "test@example.com"
-    
-    # Zerodha
-    ZERODHA_API_KEY: Optional[str] = None
-    ZERODHA_API_SECRET: Optional[str] = None
-    
-    # OpenAI
-    OPENAI_API_KEY: Optional[str] = None
-    
-    # News API
-    NEWS_API_KEY: Optional[str] = None
-    
-    # Telegram Bot
-    TELEGRAM_BOT_TOKEN: Optional[str] = None
-    
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 60 minutes * 24 hours * 8 days = 8 days
+
+    SQLALCHEMY_DATABASE_URI: Optional[str] = os.getenv("DATABASE_URL")
+
+    FIRST_SUPERUSER_EMAIL: EmailStr = "admin@example.com"
+    FIRST_SUPERUSER_PASSWORD: str = "admin"
+
     class Config:
         case_sensitive = True
         env_file = ".env"
 
-    @validator("ALLOWED_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
 
 settings = Settings()

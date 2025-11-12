@@ -1,30 +1,39 @@
-name: Deploy to GitHub Pages
+name: Deploy Frontend to GitHub Pages
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'SmartTradeAI/frontend/**'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install dependencies
-        run: |
-          cd frontend
-          npm ci
-      - name: Build
-        run: |
-          cd frontend
-          npm run build -- --base=/SmartTradeAI/
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./frontend/dist
-          publish_branch: gh-pages
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install
+      working-directory: ./SmartTradeAI/frontend
+
+    - name: Build
+      run: npm run build
+      working-directory: ./SmartTradeAI/frontend
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./SmartTradeAI/frontend/dist
+        # This is important if your GitHub Pages is served from a subdirectory
+        # For example, if your repo is `username/repo-name` and you want to serve from `repo-name`
+        # then you might need to set a base URL in your vite.config.ts and here.
+        # For now, assuming it's served from the root of the gh-pages branch.
